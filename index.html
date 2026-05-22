@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Light Theme */
+            --bg: #F3F4F6;
+            --surface: rgba(255, 255, 255, 0.7);
+            --surface-solid: #FFFFFF;
+            --accent: #4F46E5;
+            --accent-glow: rgba(79, 70, 229, 0.4);
+            --danger: #EF4444;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --text-p: #111827;
+            --text-s: #6B7280;
+            --pastel-blue: #EEF2FF;
+            --radius: 20px;
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            --border: rgba(255, 255, 255, 0.5);
+            --border-solid: #E5E7EB;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0F172A;
+            --surface: rgba(30, 41, 59, 0.7);
+            --surface-solid: #1E293B;
+            --accent: #818CF8;
+            --accent-glow: rgba(129, 140, 248, 0.4);
+            --danger: #F87171;
+            --success: #34D399;
+            --text-p: #F8FAFC;
+            --text-s: #94A3B8;
+            --pastel-blue: #312E81;
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --border: rgba(255, 255, 255, 0.05);
+            --border-solid: #334155;
+        }
+
+        [data-theme="traditional"] {
+            --bg: #4a0e17 url('https://www.transparenttextures.com/patterns/arabesque.png');
+            --surface: rgba(255, 249, 240, 0.85);
+            --surface-solid: #FFF9F0;
+            --accent: #B8860B; 
+            --accent-glow: rgba(184, 134, 11, 0.4);
+            --danger: #D9534F;
+            --success: #2E7D32;
+            --text-p: #3E2723;
+            --text-s: #795548;
+            --pastel-blue: #FDE8D7;
+            --card-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            --border: rgba(232, 213, 181, 0.5);
+            --border-solid: #E8D5B5;
+        }
+
+        [data-theme="holi"] {
+            --bg: linear-gradient(135deg, #ffb347 0%, #ffcc33 25%, #ff66cc 60%, #cc99ff 100%);
+            --surface: rgba(255, 255, 255, 0.8);
+            --surface-solid: #FFFFFF;
+            --accent: #D11141; 
+            --accent-glow: rgba(209, 17, 65, 0.5);
+            --danger: #FF3366;
+            --success: #00B159;
+            --text-p: #111111;
+            --text-s: #444444;
+            --pastel-blue: rgba(255, 255, 255, 0.6);
+            --card-shadow: 0 8px 32px rgba(209, 17, 65, 0.15);
+            --border: rgba(255, 255, 255, 0.4);
+            --border-solid: #EEEEEE;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            transition: background 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+                        color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease; 
+        }
+        
+        body { 
+            background: var(--bg); 
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--text-p); 
+            padding-bottom: 100px; 
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, .card-name { font-family: 'Poppins', sans-serif; }
+
+        /* Fancy Gradient Text */
+        .text-gradient {
+            background: linear-gradient(135deg, var(--accent), #e83e8c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            background: var(--surface);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .nav-links { display: flex; gap: 10px; }
+        
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-s);
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-btn.active {
+            background: var(--accent);
+            color: #FFF;
+            box-shadow: 0 4px 15px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:hover:not(.active) { color: var(--accent); background: var(--pastel-blue); }
+
+        .theme-selector {
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-solid);
+            background: var(--surface-solid);
+            color: var(--text-p);
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .theme-selector:hover { border-color: var(--accent); }
+
+        /* Views */
+        .page-view { display: none; opacity: 0; }
+        .page-view.active { 
+            display: block; 
+            animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
+
+        @keyframes pageEnter {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 30px; }
+        
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--card-shadow);
+        }
+
+        .header-panel { padding: 40px; margin-bottom: 40px; text-align: center; }
+
+        .search-container { position: relative; margin-bottom: 40px; }
+        .search-box { 
+            width: 100%; padding: 20px 30px; border-radius: 16px; 
+            border: 2px solid transparent; background: var(--surface-solid); 
+            color: var(--text-p); font-size: 16px; font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); outline: none;
+            transition: all 0.3s ease;
+        }
+        .search-box:focus { 
+            transform: translateY(-3px); 
+            border-color: var(--accent);
+            box-shadow: 0 15px 40px var(--accent-glow); 
+        }
+
+        .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 30px 0; }
+        input[type="text"], input[type="tel"] { 
+            padding: 14px; border-radius: 12px; border: 1px solid var(--border-solid); 
+            background: var(--surface-solid); color: var(--text-p); width: 100%; outline: none; 
+        }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+        .btn-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; border-top: 1px solid var(--border-solid); padding-top: 25px; margin-top: 20px;}
+        .btn { padding: 12px 24px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; position: relative; overflow: hidden; }
+        
+        /* Button Ripple & Hover Effects */
+        .btn::after {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0;
+            background: rgba(255,255,255,0.2); border-radius: 50%; transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+        .btn:active::after { width: 200px; height: 200px; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .btn:active { transform: scale(0.96); }
+        
+        .btn-p { background: var(--accent); color: #FFF; box-shadow: 0 4px 15px var(--accent-glow); }
+        .btn-p:hover { box-shadow: 0 8px 25px var(--accent-glow); }
+        .btn-s { background: var(--pastel-blue); color: var(--accent); }
+        .btn-d { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .btn-filter { background: var(--surface-solid); border: 1px solid var(--border-solid); color: var(--text-s); }
+        .btn-filter.active { background: var(--accent); color: #FFF; border-color: var(--accent); }
+
+        .year-section { margin-bottom: 50px; }
+        .year-title { font-size: 16px; font-weight: 800; color: var(--text-s); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 25px; display: flex; align-items: center; gap: 15px; }
+        .year-title::after { content: ""; flex: 1; height: 2px; background: var(--border-solid); border-radius: 2px;}
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+
+        /* Card Styles */
+        @keyframes cardPop {
+            from { opacity: 0; transform: translateY(40px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .card { 
+            background: var(--surface); padding: 25px; border-radius: var(--radius); 
+            border: 1px solid var(--border); cursor: pointer; position: relative; overflow: hidden; 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: cardPop 0.6s backwards;
+        }
+        .card:hover { 
+            transform: translateY(-10px); 
+            box-shadow: 0 20px 40px var(--card-shadow); 
+            border-color: var(--accent); 
+        }
+        .card.hired { border-left: 6px solid var(--success); }
+        .card.disabled { opacity: 0.5; filter: grayscale(1); }
+
+        .card-name { font-weight: 800; font-size: 20px; margin-bottom: 5px; }
+        .tag { background: var(--pastel-blue); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; margin: 3px 3px 3px 0; color: var(--accent); display: inline-block; letter-spacing: 0.5px;}
+        
+        .trending-badge { position: absolute; top: 20px; right: -35px; background: var(--danger); color: white; font-size: 11px; font-weight: 800; padding: 5px 40px; transform: rotate(45deg); box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4); letter-spacing: 1px;}
+        
+        /* Gamified Event Elements */
+        .timer-box { font-family: 'Poppins', monospace; font-size: 15px; font-weight: 700; color: var(--warning); margin: 15px 0; background: var(--surface-solid); padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--border-solid); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
+        .timer-box.urgent { color: var(--danger); animation: pulseAlert 2s infinite; }
+        
+        @keyframes pulseAlert {
+            0% { box-shadow: inset 0 0 0 rgba(239, 68, 68, 0); }
+            50% { box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2); }
+            100% { box-shadow: inset 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .progress-bar-bg { width: 100%; height: 6px; background: var(--border-solid); border-radius: 6px; margin-top: 8px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 6px; transition: width 1s ease-in-out; }
+
+        .rsvp-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+
+        /* Modal Styles */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center; z-index: 1000; 
+            opacity: 0; visibility: hidden; transition: all 0.4s ease;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+
+        .modal { 
+            background: var(--surface-solid); width: 90%; max-width: 500px; padding: 40px; 
+            border-radius: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); 
+            max-height: 85vh; overflow-y: auto; color: var(--text-p); 
+            transform: scale(0.9) translateY(20px); opacity: 0;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid var(--border-solid);
+        }
+        .modal-overlay.show .modal { transform: scale(1) translateY(0); opacity: 1; }
+
+        .modal-action-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; padding-top: 25px; border-top: 1px solid var(--border-solid); }
+
+        /* Custom Toast Notification */
+        #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background: var(--surface-solid); color: var(--text-p); padding: 16px 24px; border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-left: 5px solid var(--accent);
+            font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 12px;
+            transform: translateX(120%); opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+
+        #file-input { display: none; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-s); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        /* Empty State */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-s); }
+        .empty-state h3 { font-size: 24px; margin-bottom: 10px; color: var(--text-p); }
+
+        footer { margin-top: 60px; padding: 25px; text-align: center; border-top: 1px solid var(--border-solid); width: 100%; background: var(--surface); backdrop-filter: blur(10px); }
+        footer p { margin: 0; font-family: 'Poppins', monospace; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; opacity: 0.5; color: var(--text-p); }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="nav-links">
+        <button class="nav-btn active" id="btn-faculty" onclick="switchPage('faculty')">Faculty Console</button>
+        <button class="nav-btn" id="btn-events" onclick="switchPage('events')">Campus Event Hub</button>
+    </div>
+    <div class="nav-controls">
+        <select id="themeDropdown" class="theme-selector" onchange="changeTheme(this.value)">
+            <option value="light">Light Mode ☀️</option>
+            <option value="dark">Dark Mode 🌙</option>
+            <option value="traditional">Traditional 🪔</option>
+            <option value="holi">Holi Special 🎨</option>
+        </select>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div id="page-faculty" class="page-view active">
+        <div class="glass-panel header-panel">
+            <h1 class="text-gradient" style="margin-bottom:10px; font-size: 32px;">MET Faculty Console</h1>
+            <p style="color:var(--text-s); margin-bottom: 30px;">Manage student talent, assign tasks, and build your dream team.</p>
+            
+            <div class="control-grid">
+                <input type="text" id="facName" placeholder="Faculty Member Name" oninput="saveMem()">
+                <input type="text" id="taskDesc" placeholder="Task to Assign" oninput="saveMem()">
+                <div style="display:flex;">
+                    <label for="file-input" class="btn btn-s" style="width:100%; text-align:center;">📥 Import Dataset (.xlsx)</label>
+                    <input type="file" id="file-input" accept=".xlsx, .csv">
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-p" onclick="promoteWithWarning()">Promote Academic Year</button>
+                <button class="btn btn-filter" onclick="exportData()">💾 Daily Backup</button>
+                <button class="btn btn-d" onclick="deleteAll()">Wipe Data</button>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <input type="text" class="search-box" id="searchInput" onkeyup="render()" placeholder="🔍 Search by name, skills, or roll number...">
+        </div>
+        <div id="display-area"></div>
+    </div>
+
+    <div id="page-events" class="page-view">
+        <div class="glass-panel header-panel">
+            <h1 class="text-gradient" style="margin-bottom:10px; font-size: 32px;">🔥 Campus Discovery Hub</h1>
+            <p style="color:var(--text-s); margin-bottom: 10px;">Stay updated. Never miss out on campus activities.</p>
+            
+            <div class="btn-row" style="border:none; padding-top:10px;">
+                <button class="btn btn-filter active" onclick="filterEvents('all')">All Events</button>
+                <button class="btn btn-filter" onclick="filterEvents('technical')">Technical</button>
+                <button class="btn btn-filter" onclick="filterEvents('cultural')">Cultural</button>
+                <button class="btn btn-filter" onclick="filterEvents('sports')">Sports</button>
+            </div>
+        </div>
+
+        <div class="year-section" id="trending-section">
+            <div class="year-title">📈 Trending Now (Filling Fast)</div>
+            <div class="grid" id="trending-area"></div>
+        </div>
+
+        <div class="year-section">
+            <div class="year-title">📅 Upcoming Events</div>
+            <div class="grid" id="events-area"></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal" id="modalContent" onclick="event.stopPropagation()">
+        <div id="modalData"></div>
+        <div class="modal-action-bar" id="modalActions"></div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<footer>
+      <p>Established 2026 // CLRT FREAKS - 10 // MET IOM NSK</p>
+</footer>
+
+<script>
+    // --- STATE MANAGEMENT ---
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let students = JSON.parse(localStorage.getItem('acad_data')) || [];
+    
+    // Gamified Event Data (Added Max Capacity for progress bars)
+    let events = JSON.parse(localStorage.getItem('campus_events')) || [
+        { id: 101, title: 'AI & Web3 Hackathon', category: 'technical', date: new Date().getTime() + 172800000, rsvps: 214, capacity: 250, loc: 'Main Lab' },
+        { id: 102, title: 'Inter-College Dance Battle', category: 'cultural', date: new Date().getTime() + 432000000, rsvps: 340, capacity: 500, loc: 'Auditorium' },
+        { id: 103, title: 'State Level Basketball', category: 'sports', date: new Date().getTime() + 86400000, rsvps: 85, capacity: 100, loc: 'Campus Turf' },
+        { id: 104, title: 'UI/UX Design Workshop', category: 'technical', date: new Date().getTime() + 300000000, rsvps: 45, capacity: 60, loc: 'Room 204' }
+    ];
+    let currentFilter = 'all';
+
+    // --- INITIALIZATION ---
+    window.onload = () => {
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        document.getElementById('themeDropdown').value = currentTheme;
+        
+        document.getElementById('facName').value = localStorage.getItem('acad_fac') || "";
+        document.getElementById('taskDesc').value = localStorage.getItem('acad_task') || "";
+        
+        render();
+        renderEvents(); 
+        setInterval(updateCountdowns, 1000); 
+
+        const savedPage = localStorage.getItem('activePage') || 'faculty';
+        switchPage(savedPage);
+    };
+
+    // --- TOAST NOTIFICATIONS (Replaces Alerts) ---
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+        toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+        
+        container.appendChild(toast);
+        
+        // Trigger reflow for animation
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, 3000);
+    }
+
+    // --- FIRE CONFETTI (Addictive Micro-interaction) ---
+    function triggerConfetti() {
+        var duration = 2 * 1000;
+        var end = Date.now() + duration;
+
+        (function frame() {
+            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#4F46E5', '#10B981', '#F59E0B'] });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#4F46E5', '#10B981', '#F59E0B'] });
+            if (Date.now() < end) { requestAnimationFrame(frame); }
+        }());
+    }
+
+    // --- THEME & NAVIGATION ---
+    function changeTheme(themeValue) {
+        currentTheme = themeValue;
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('theme', currentTheme);
+    }
+
+    function switchPage(pageId) {
+        document.querySelectorAll('.page-view').forEach(view => view.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+        document.getElementById(`page-${pageId}`).classList.add('active');
+        document.getElementById(`btn-${pageId}`).classList.add('active');
+        localStorage.setItem('activePage', pageId);
+    }
+
+    // --- FACULTY CORE LOGIC ---
+    function saveMem() {
+        localStorage.setItem('acad_fac', document.getElementById('facName').value);
+        localStorage.setItem('acad_task', document.getElementById('taskDesc').value);
+    }
+
+    function sync() {
+        localStorage.setItem('acad_data', JSON.stringify(students));
+        render();
+    }
+
+    // Excel Upload
+    document.getElementById('file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const workbook = XLSX.read(evt.target.result, { type: 'binary' });
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                students = json.map((row, idx) => ({
+                    id: row._uid || Date.now() + idx,
+                    status: row._status || 'active',
+                    rawData: row,
+                    name: row["Add your full name"] || row.name || "Unknown",
+                    phone: row["Add your contact number"] || row.phone || "",
+                    section: row["Your Section"] || row.section || "General",
+                    skills: row["What are your Primary Creative Interests ? "] || row.skills || ""
+                }));
+                sync();
+                showToast(`Successfully imported ${students.length} records!`, 'success');
+            } catch(err) {
+                showToast("Failed to parse file. Ensure it's a valid Excel/CSV.", 'error');
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = ''; // Reset
+    });
+
+    function render() {
+        const area = document.getElementById('display-area');
+        area.innerHTML = "";
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const groups = {};
+        let count = 0;
+
+        students.filter(s => s.status !== 'deleted').forEach(s => {
+            const roll = (s.rawData["Your Roll no."] || "").toString().toLowerCase();
+            if (s.name.toLowerCase().includes(query) || s.skills.toLowerCase().includes(query) || roll.includes(query)) {
+                if (!groups[s.section]) groups[s.section] = [];
+                groups[s.section].push(s);
+                count++;
+            }
+        });
+
+        if (count === 0) {
+            area.innerHTML = `
+                <div class="empty-state">
+                    <h3>No Students Found 🕵️‍♂️</h3>
+                    <p>Try importing a dataset or adjusting your search criteria.</p>
+                </div>
+            `;
+            return;
+        }
+
+        Object.keys(groups).sort().forEach(year => {
+            const section = document.createElement('div');
+            section.className = 'year-section';
+            section.innerHTML = `<div class="year-title">${year}</div><div class="grid"></div>`;
+            const grid = section.querySelector('.grid');
+
+            groups[year].forEach((s, index) => {
+                const card = document.createElement('div');
+                card.className = `card ${s.status}`;
+                card.style.animationDelay = `${index * 0.05}s`;
+                
+                // Use Event Listener instead of inline string concat to prevent quote bugs
+                card.addEventListener('click', () => showIDWindow(s.id));
+                
+                const skillTags = s.skills.split(',').slice(0,3).map(sk => `<span class="tag">${sk.trim()}</span>`).join('');
+                
+                card.innerHTML = `
+                    <div class="card-name">${s.name}</div>
+                    <div style="font-size:12px; font-weight: 600; color:var(--text-s); margin-bottom:15px;">Roll No: ${s.rawData["Your Roll no."] || '---'}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${skillTags}</div>
+                `;
+                grid.appendChild(card);
+            });
+            area.appendChild(section);
+        });
+    }
+
+    function showIDWindow(id) {
+        const s = students.find(x => x.id === id);
+        const dataBox = document.getElementById('modalData');
+        const actionBox = document.getElementById('modalActions');
+
+        let html = `<h2 class="text-gradient" style="margin-bottom:25px; font-size:28px;">Student Profile</h2>`;
+        for (const [k, v] of Object.entries(s.rawData)) {
+            if (!k.startsWith('_')) {
+                html += `<div style="margin-bottom:16px; background:var(--bg); padding:12px; border-radius:12px;">
+                            <p style="font-size:10px; color:var(--text-s); font-weight:800; text-transform:uppercase; margin-bottom:4px;">${k}</p>
+                            <p style="font-size:15px; font-weight:500;">${v || '—'}</p>
+                         </div>`;
+            }
+        }
+        dataBox.innerHTML = html;
+
+        // Reset actions safely
+        actionBox.innerHTML = '';
+        
+        const hireBtn = document.createElement('button');
+        hireBtn.className = `btn ${s.status === 'hired' ? 'btn-filter' : 'btn-p'}`;
+        hireBtn.innerText = s.status === 'hired' ? 'Revoke Status' : 'Mark as Hired ⭐';
+        hireBtn.onclick = () => { manualHired(s.id); if(s.status !== 'hired') triggerConfetti(); };
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn btn-d';
+        delBtn.innerText = 'Delete Record';
+        delBtn.onclick = () => deleteStudent(s.id);
+        
+        const waBtn = document.createElement('button');
+        waBtn.className = 'btn btn-s';
+        waBtn.style = 'grid-column: span 2; padding:16px; font-size:16px;';
+        waBtn.innerText = '📱 Contact via WhatsApp';
+        waBtn.onclick = () => whatsappDirect(s.id);
+
+        actionBox.append(hireBtn, delBtn, waBtn);
+        document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function manualHired(id) {
+        const s = students.find(x => x.id === id);
+        s.status = s.status === 'hired' ? 'active' : 'hired';
+        sync(); 
+        closeModal();
+        showToast(s.status === 'hired' ? 'Student Marked as Hired!' : 'Status reset to active.', 'success');
+    }
+
+    function deleteStudent(id) {
+        if (confirm("⚠️ Permanently delete this student record? This cannot be undone.")) {
+            students = students.filter(x => x.id !== id);
+            sync(); 
+            closeModal();
+            showToast('Record deleted.', 'error');
+        }
+    }
+
+    function whatsappDirect(id) {
+        const s = students.find(x => x.id === id);
+        const fac = document.getElementById('facName').value.trim();
+        const task = document.getElementById('taskDesc').value.trim();
+        
+        if (!fac || !task) {
+            showToast("Missing Info: Please enter your Faculty Name and Task at the top of the screen.", 'warning');
+            closeModal();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        
+        s.status = 'hired'; 
+        sync();
+        const msg = `Dear ${s.name},\nWe are pleased to invite you to contribute in ${task}. Your expertise in ${s.skills} would be a valuable addition. If interested, please meet ${fac}.\n\nBest Regards,\n${fac}`;
+        window.open(`https://wa.me/91${s.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+        triggerConfetti();
+        closeModal();
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+    function promoteWithWarning() {
+        if (confirm("⚠️ DANGER: Promoting the Academic Year will PERMANENTLY delete Graduated BCA/BBA (Year 4) and MCA/MBA (Year 2) students. Proceed?")) {
+            const initialCount = students.length;
+            students = students.filter(s => {
+                const sec = s.section;
+                const isBCA_BBA = sec.includes("BCA") || sec.includes("BBA");
+                const isMCA_MBA = sec.includes("MCA") || sec.includes("MBA");
+                
+                if (sec.includes("First Year")) s.section = sec.replace("First Year", "Second Year");
+                else if (sec.includes("Second Year")) {
+                    if (isMCA_MBA) return false; // Graduate Post-grads
+                    s.section = sec.replace("Second Year", "Third Year");
+                }
+                else if (sec.includes("Third Year")) s.section = sec.replace("Third Year", "Fourth Year");
+                else if (sec.includes("Fourth Year") && isBCA_BBA) return false; // Graduate Under-grads
+                return true;
+            });
+            sync();
+            const deletedCount = initialCount - students.length;
+            showToast(`Success! Promoted year and graduated ${deletedCount} students.`, 'success');
+        }
+    }
+
+    function exportData() {
+        if(students.length === 0) return showToast("No data to export.", 'warning');
+        
+        const data = students.map(s => {
+            const row = {...s.rawData};
+            row._status = s.status; row._uid = s.id; row.section = s.section;
+            return row;
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Backup");
+        XLSX.writeFile(wb, `MET_Portal_Backup_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast("Backup Downloaded!", 'success');
+    }
+
+    function deleteAll() { 
+        if(confirm("🚨 CRITICAL WARNING: Erase ALL student data?")) { 
+            students = []; localStorage.removeItem('acad_data'); sync(); 
+            showToast("All data wiped out.", 'error');
+        } 
+    }
+
+    // --- EVENTS CORE LOGIC ---
+    function syncEvents() {
+        localStorage.setItem('campus_events', JSON.stringify(events));
+        renderEvents();
+    }
+
+    function filterEvents(category) {
+        currentFilter = category;
+        document.querySelectorAll('#page-events .btn-filter').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.innerText.toLowerCase() === category || (category === 'all' && btn.innerText === 'All Events')) {
+                btn.classList.add('active');
+            }
+        });
+        renderEvents();
+    }
+
+    function renderEvents() {
+        const allEventsArea = document.getElementById('events-area');
+        const trendingArea = document.getElementById('trending-area');
+        allEventsArea.innerHTML = "";
+        trendingArea.innerHTML = "";
+
+        let displayEvents = currentFilter !== 'all' ? events.filter(e => e.category === currentFilter) : events;
+
+        if(displayEvents.length === 0) {
+            allEventsArea.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <h3>No Events Scheduled 📭</h3>
+                    <p>Check back later for new ${currentFilter === 'all' ? '' : currentFilter} activities.</p>
+                </div>
+            `;
+        }
+
+        let trendingEvents = [...events].sort((a, b) => b.rsvps - a.rsvps).slice(0, 2);
+
+        if (currentFilter === 'all' && events.length > 0) {
+            document.getElementById('trending-section').style.display = 'block';
+            trendingEvents.forEach((e, index) => {
+                trendingArea.appendChild(createEventCard(e, true, index));
+            });
+        } else {
+            document.getElementById('trending-section').style.display = 'none'; 
+        }
+
+        displayEvents.forEach((e, index) => {
+            allEventsArea.appendChild(createEventCard(e, false, index));
+        });
+    }
+
+    function createEventCard(eventObj, isTrending, index) {
+        const card = document.createElement('div');
+        card.className = 'card glass-panel';
+        card.style.cursor = 'default';
+        card.style.animationDelay = `${index * 0.1}s`;
+        
+        let trendingHtml = isTrending ? `<div class="trending-badge">HOT 🔥</div>` : '';
+        let fillPercent = Math.min((eventObj.rsvps / eventObj.capacity) * 100, 100);
+        
+        // Build inner HTML safely
+        card.innerHTML = `
+            ${trendingHtml}
+            <span class="tag" style="text-transform:uppercase;">${eventObj.category}</span>
+            <div class="card-name" style="margin-top:10px;">${eventObj.title}</div>
+            <div style="font-size:13px; font-weight: 500; color:var(--text-s);">📍 ${eventObj.loc}</div>
+            
+            <div class="timer-box" data-date="${eventObj.date}">Calculating...</div>
+            
+            <div style="display:flex; justify-content: space-between; font-size: 11px; font-weight:700; color:var(--text-s); margin-top:15px;">
+                <span>Registration Status</span>
+                <span>${eventObj.rsvps} / ${eventObj.capacity} Filled</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${fillPercent}%; background: ${fillPercent > 80 ? 'var(--danger)' : 'var(--accent)'};"></div>
+            </div>
+
+            <div class="rsvp-bar">
+                <div style="font-size:13px; font-weight:700; color:var(--text-p);">
+                    👥 <span>${eventObj.rsvps}</span> Attending
+                </div>
+            </div>
+        `;
+
+        // Attach event listener securely (Fixes quoting bugs)
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-p';
+        btn.style = 'padding: 8px 16px; border-radius: 8px; font-size:12px;';
+        btn.innerText = fillPercent >= 100 ? 'Waitlist' : 'RSVP Now';
+        if(fillPercent >= 100) btn.classList.replace('btn-p', 'btn-filter');
+        btn.onclick = () => handleRSVP(eventObj);
+        
+        card.querySelector('.rsvp-bar').appendChild(btn);
+
+        return card;
+    }
+
+    function handleRSVP(eventObj) {
+        const dataBox = document.getElementById('modalData');
+        const actionBox = document.getElementById('modalActions');
+
+        dataBox.innerHTML = `
+            <h2 class="text-gradient" style="margin-bottom:5px; font-size:26px;">Event Registration</h2>
+            <p style="font-size:15px; font-weight:700; color:var(--text-p); margin-bottom:25px;">${eventObj.title}</p>
+            
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="regName" placeholder="e.g. John Doe">
+            </div>
+            <div class="form-group">
+                <label>WhatsApp Number</label>
+                <input type="tel" id="regPhone" placeholder="e.g. 9876543210">
+            </div>
+            <div class="form-group">
+                <label>Course & Year</label>
+                <input type="text" id="regCourse" placeholder="e.g. BCA 2nd Year">
+            </div>
+        `;
+
+        actionBox.innerHTML = '';
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-filter';
+        cancelBtn.innerText = 'Cancel';
+        cancelBtn.onclick = closeModal;
+
+        const submitBtn = document.createElement('button');
+        submitBtn.className = 'btn btn-p';
+        submitBtn.innerText = 'Confirm & Generate Ticket';
+        submitBtn.onclick = () => submitRSVP(eventObj);
+
+        actionBox.append(cancelBtn, submitBtn);
+        document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function submitRSVP(eventObj) {
+        const name = document.getElementById('regName').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const course = document.getElementById('regCourse').value.trim();
+
+        if (!name || !phone || !course) {
+            return showToast("Please fill out all fields to secure your spot.", "warning");
+        }
+
+        // Update Local State
+        const eventIndex = events.findIndex(e => e.id === eventObj.id);
+        if (eventIndex > -1 && events[eventIndex].rsvps < events[eventIndex].capacity) {
+            events[eventIndex].rsvps += 1;
+            syncEvents(); 
+        }
+
+        // Addictive Reward
+        triggerConfetti();
+        showToast(`You are successfully registered for ${eventObj.title}!`, "success");
+
+        // Open WhatsApp Confirmation
+        const targetNumber = "91" + phone; // Replaced hardcoded number with user's number to send confirmation to themselves (or it could be a centralized bot number)
+        const whatsappMessage = `*Event Ticket Confirmed!* 🎉\n\n*Event:* ${eventObj.title}\n*Name:* ${name}\n*Course:* ${course}\n\n_See you there! Generated via MET Hub_`;
+        
+        setTimeout(() => {
+            window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
+        }, 1500);
+
+        closeModal();
+    }
+
+    function updateCountdowns() {
+        const timers = document.querySelectorAll('.timer-box');
+        const now = new Date().getTime();
+
+        timers.forEach(timer => {
+            const eventDate = parseInt(timer.getAttribute('data-date'));
+            const distance = eventDate - now;
+
+            if (distance < 0) {
+                timer.innerHTML = "🏁 EVENT CONCLUDED";
+                timer.style.color = "var(--text-s)";
+                timer.classList.remove('urgent');
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Add pulsing urgent effect if less than 24 hours
+            if (days === 0) {
+                timer.classList.add('urgent');
+            } else {
+                timer.classList.remove('urgent');
+            }
+
+            timer.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m ${seconds}s`;
+        });
+    }
+</script>
+</body>
+</html>
